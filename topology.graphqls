@@ -32,11 +32,14 @@ type EndpointTopology {
     calls: [Call!]!
 }
 
+type ProcessTopology {
+    nodes: [ProcessNode!]!
+    calls: [Call!]!
+}
+
 # Node in Topology
 type Node {
-    # The global id of each node,
-    # 1. Service id
-    # 2. Endpoint id
+    # The service ID of the node.
     id: ID!
     # The literal name of the #id.
     name: String!
@@ -58,9 +61,8 @@ type ServiceInstanceNode {
     serviceId: ID!
     # The literal name of the #serviceId.
     serviceName: String!
-    # The type name may be
-    # 1. The service provider/middleware tech, such as: Tomcat, SpringMVC
-    # 2. Conjectural Service, e.g. MySQL, Redis, Kafka
+    # [Deprecated]
+    # No type for service instance topology.
     type: String
     # It is a conjecture node or real node, to represent an instance.
     isReal: Boolean!
@@ -76,11 +78,29 @@ type EndpointNode {
     serviceId: ID!
     # The literal name of the #serviceId.
     serviceName: String!
-    # The type name may be
-    # 1. The service provider/middleware tech, such as: Tomcat, SpringMVC
-    # 2. Conjectural Service, e.g. MySQL, Redis, Kafka
+    # [Deprecated]
+    # No type for service instance topology.
     type: String
     # It is a conjuecture node or real node, to represent an instance.
+    isReal: Boolean!
+}
+
+# Node in ProcessTopology
+type ProcessNode {
+    # The process id of each node.
+    id: ID!
+    # Service id
+    serviceId: ID!
+    # The literal name of the #serviceId.
+    serviceName: String!
+    # Service Instance id
+    serviceInstanceId: ID!
+    # The literal name of the #serviceInstanceId.
+    serviceInstanceName: String!
+    # The name of the process
+    name: String!
+    # It's a virtual node or real node.
+    # A unreal node means that the current node is not a process belonging to this instance, but interacting with the processes belonging to the instance.
     isReal: Boolean!
 }
 
@@ -89,21 +109,16 @@ type EndpointNode {
 type Call {
     source: ID!
     # The protocol and tech stack used at source side in this distributed call
+    # No value in instance topology and endpoint dependency.
     sourceComponents: [ID!]!
     target: ID!
     # The protocol and tech stack used at target side in this distributed call
+    # No value in instance topology and endpoint dependency.
     targetComponents: [ID!]!
     id: ID!
     # The detect Points of this distributed call.
     detectPoints: [DetectPoint!]!
 }
-
-enum NodeType {
-    SERVICE,
-    ENDPOINT,
-    USER
-}
-
 
 extend type Query {
     # Query the global topology
@@ -119,4 +134,6 @@ extend type Query {
     getEndpointTopology(endpointId: ID!, duration: Duration!): Topology
     # v2 of getEndpointTopology
     getEndpointDependencies(endpointId: ID!, duration: Duration!): EndpointTopology
+    # Query the topology, based on the given instance
+    getProcessTopology(serviceInstanceId: ID!, duration: Duration!): ProcessTopology
 }
